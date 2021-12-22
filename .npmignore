@@ -1,0 +1,8 @@
+src
+tsconfig.json
+.eslintrc.js
+.prettierignore
+.gitignore
+.eslintignore
+demo.js
+.husky
