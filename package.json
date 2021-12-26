@@ -31,8 +31,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs}": [
-      "pnpm lint",
-      "pnpm exec vitest --watch=false"
+      "pnpm lint"
     ]
   },
   "devDependencies": {
@@ -63,6 +62,9 @@
     "vitest": "^0.0.103"
   },
   "vota": {
-    "node": "16.11.0"
+    "node": "16.13.0"
+  },
+  "dependencies": {
+    "@ch20026103/anysis": "^0.0.1"
   }
 }
