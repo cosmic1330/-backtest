@@ -26,6 +26,7 @@ export default class Context {
   stockIds: string[];
   capital: number;
   hightLoss: number;
+  unSoldProfit: number;
   buyMethod: string;
   sellMethod: string;
   hightStockPrice?: number;
@@ -34,6 +35,7 @@ export default class Context {
 
   constructor(data: { [stockId: string]: Data[] }, options: Options) {
     this.stockIds = Object.keys(data);
+    this.unSoldProfit = 0;
     this.capital = options?.capital ? options.capital : 300000;
     this.hightStockPrice = options?.hightStockPrice;
     this.customBuyMethod = options?.customBuyMethod;
@@ -143,10 +145,24 @@ export default class Context {
     console.log(this.dateSequence.currentDate);
     this.buy();
     this.sell();
+    this.calcUnSoldProfit();
   }
 
   run() {
     this.dateSequence.setNext();
+  }
+
+  calcUnSoldProfit() {
+    this.unSoldProfit = 0;
+    const stockIds = Object.keys(this.record.inventory);
+    for (let i = 0; i < stockIds.length; i++) {
+      const stockId = stockIds[i];
+      const historyData = this.dateSequence.getHistoryData(stockId);
+      const nowData = historyData[historyData.length - 1];
+      const sellNowPrice = this.transaction.getSellPrice(nowData.l);
+      const buyData = this.record.getInventoryStockIdData(stockId);
+      this.unSoldProfit += sellNowPrice - buyData.buyPrice;
+    }
   }
 
   // WIP

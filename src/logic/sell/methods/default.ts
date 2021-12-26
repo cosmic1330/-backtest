@@ -11,7 +11,7 @@ export default function Default(data: Data[]): LogicResType {
   const length = williamsData.length - 1;
 
   if (
-    williamsData[length].williams9 &&
+    data[data.length - 1]?.sumING < -100 &&
     (williamsData[length].williams9 as number) > -10
   ) {
     res.status = true;
