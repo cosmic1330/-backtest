@@ -6,7 +6,6 @@
   "bugs": "git@github.com:cosmic1330/backTest/issues",
   "repository": "git@github.com:cosmic1330/backTest",
   "license": "ISC",
-  "private": "true",
   "author": "kim <ch20026103@yahoo.com.tw> (https://github.com/cosmic1330)",
   "contributors": [],
   "main": "dist/cjs/index.js",

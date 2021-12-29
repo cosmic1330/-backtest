@@ -1,11 +1,11 @@
-# @ch20026103/anysis
+# @ch20026103/backtest
 
 ## Install
 
 npm:
 
 ```
-npm install @ch20026103/anysis
+npm install @ch20026103/backtest
 ```
 
 ## Usage

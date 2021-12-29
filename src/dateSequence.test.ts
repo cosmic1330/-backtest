@@ -6,7 +6,6 @@ const mockData = data as { [stockId: string]: Data[] };
 describe("test dateSequence", () => {
   it("default", () => {
     const dateSequence = new DateSequence({ data: mockData });
-    console.log(dateSequence.DatesData);
     expect(true).toEqual(true);
   });
 });
