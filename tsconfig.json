@@ -18,6 +18,7 @@
     "isolatedModules": false,
     "jsx": "react",
     "noFallthroughCasesInSwitch": true,
+    "types": ["vitest/global"],
     "noEmit": false,
     "paths": {
       "@": ["./src/*"]
