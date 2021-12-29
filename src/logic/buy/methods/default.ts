@@ -8,7 +8,6 @@ export default function Default(data: Data[]): LogicResType {
 
   const macd = new Macd();
   const macdData = macd.getMACD(data);
-  const length = macdData.length - 1;
 
   if (
     data[data.length - 1]?.sumING > 100 &&

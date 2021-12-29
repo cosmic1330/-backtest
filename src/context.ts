@@ -2,8 +2,8 @@ import Record from "./record";
 import DateSequence from "./dateSequence";
 import Transaction from "./transaction";
 import type { Data, LogicResType } from "./types";
-import buyLogic from "./logic/buy";
-import sellLogic from "./logic/sell";
+import buyLogic from "./logic/buy/index.js";
+import sellLogic from "./logic/sell/index.js";
 
 type Options = {
   startDate?: number;

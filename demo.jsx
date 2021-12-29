@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
-import { Context } from "./src/index";
+import { Context } from "./dist/esm/index";
 import data from "./data/data.json";
 
 ReactDOM.render(<App />, document.getElementById("root"));
