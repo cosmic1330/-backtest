@@ -1,5 +1,4 @@
-import DateSequence from "./dateSequence";
-import { Data } from "./types";
+import Context from "./context";
 const json = {
   "1101": [],
   "2330": [
@@ -34,15 +33,13 @@ const json = {
 
 describe("test dateSequence", () => {
   it("currentDate", () => {
-    const dateSequence = new DateSequence({ data: json });
-
-    expect(dateSequence.currentDate).toEqual(20200729);
+    const context = new Context(json, {});
+    expect(context.dateSequence.currentDate).toEqual(20200729);
   });
 
-  it("setNext", () => {
-    const dateSequence = new DateSequence({ data: json });
-    dateSequence.setNext();
-
-    expect(dateSequence.currentDate).toEqual(20200730);
+  it("run() currentDate", () => {
+    const context = new Context(json, {});
+    context.run();
+    expect(context.dateSequence.currentDate).toEqual(20200730);
   });
 });

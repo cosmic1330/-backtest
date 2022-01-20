@@ -2,36 +2,60 @@ import React, { useEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import { Context } from "./dist/esm/index";
 import data from "./data/data.json";
+import { Ma } from "@ch20026103/anysis";
 
 ReactDOM.render(<App />, document.getElementById("root"));
 
 // 客製化
-// function customBuyMethod(data) {
-//   let res = {
-//     status: false,
-//     detail: "Not up to standard",
-//   };
-//   if (data[data.length - 1].l < 150) {
-//     res.status = true;
-//     res.detail = `l:${data[data.length - 1].l} < 150`;
-//   }
-//   return res;
-// }
+function customBuyMethod(data) {
+  let ma = new Ma();
+  let stockData = ma.getBoll(data);
+  let res = {
+    status: false,
+    detail: "Not up to standard",
+  };
+  if (
+    stockData[stockData.length - 1]["c"] > 150 &&
+    stockData[stockData.length - 1]["bollLb"] <
+      stockData[stockData.length - 1]["c"] &&
+    stockData[stockData.length - 2]["bollLb"] <
+      stockData[stockData.length - 2]["c"] &&
+    (stockData[stockData.length - 3]["bollLb"] >
+      stockData[stockData.length - 3]["c"] ||
+      stockData[stockData.length - 4]["bollLb"] >
+        stockData[stockData.length - 4]["c"])
+  ) {
+    res.status = true;
+    res.detail = `bollLb:${stockData[stockData.length - 1].c} > ${
+      stockData[stockData.length - 1]["bollLb"]
+    }`;
+  }
+  return res;
+}
 
-// function customSellMethod(data) {
-//   let res = {
-//     status: false,
-//     detail: "Not up to standard",
-//   };
-//   if (data[data.length - 1].l < 150) {
-//     res.status = true;
-//     res.detail = `l:${data[data.length - 1].l} > 150`;
-//   }
-//   return res;
-// }
+function customSellMethod(data) {
+  let ma = new Ma();
+  let stockData = ma.getBoll(data);
+  let res = {
+    status: false,
+    detail: "Not up to standard",
+  };
+  if (
+    stockData[stockData.length - 1]["bollUb"] <
+    stockData[stockData.length - 1]["c"]
+  ) {
+    res.status = true;
+    res.detail = `bollUb:${stockData[stockData.length - 1].c} > ${
+      stockData[stockData.length - 1]["bollUb"]
+    }`;
+  }
+  return res;
+}
 
 function App() {
-  const context = useRef(new Context(data, { hightLoss: 0.15 }));
+  const context = useRef(
+    new Context(data, { hightLoss: 0.15, customBuyMethod, customSellMethod })
+  );
   let [show, setShow] = useState("");
   let [profit, setProfit] = useState("");
   let [capital, setCapital] = useState("");

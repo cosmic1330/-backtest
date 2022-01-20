@@ -66,16 +66,19 @@ export default class Context {
   }
 
   buy() {
-    for (let i = 0; i < this.stockIds.length; i++) {
-      const stockId = this.stockIds[i];
+    const sortStockIds = this.stockIds.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < sortStockIds.length; i++) {
+      const stockId = sortStockIds[i];
       // 在庫存中 跳過
       if (this.record.getInventoryStockId(stockId)) continue;
 
       const historyData = this.dateSequence.getHistoryData(stockId);
       const buyData = historyData[historyData.length - 1];
-      const buyOpenPrice = this.transaction.getBuyPrice(buyData.o);
+
+      const buyOpenPrice = buyData && this.transaction.getBuyPrice(buyData.o);
       // 在待購清單內且本金足夠 買入
       if (
+        buyData &&
         this.record.getWaitPurchasedStockId(stockId) &&
         this.capital - buyOpenPrice > 0
       ) {
@@ -85,14 +88,16 @@ export default class Context {
       }
 
       // 達到買入條件加入待購清單
-      const res = this.customBuyMethod
-        ? this.customBuyMethod(historyData)
-        : buyLogic(historyData, this.buyMethod);
-      if (res.status) {
-        this.record.saveWaitPurchased(stockId, {
-          detail: res.detail,
-          method: this.buyMethod,
-        });
+      if (buyData || historyData.length > 0) {
+        const res = this.customBuyMethod
+          ? this.customBuyMethod(historyData)
+          : buyLogic(historyData, this.buyMethod);
+        if (res.status) {
+          this.record.saveWaitPurchased(stockId, {
+            detail: res.detail,
+            method: this.buyMethod,
+          });
+        }
       }
     }
   }
@@ -142,10 +147,17 @@ export default class Context {
   }
 
   update() {
-    console.log(this.dateSequence.currentDate);
-    this.buy();
-    this.sell();
-    this.calcUnSoldProfit();
+    try {
+      if (isNaN(this.dateSequence.currentDate)) {
+        return;
+      }
+
+      this.buy();
+      this.sell();
+      this.calcUnSoldProfit();
+    } catch (error) {
+      console.log("update error:", error);
+    }
   }
 
   run() {

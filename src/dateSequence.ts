@@ -54,10 +54,12 @@ export default class DateSequence {
     let nextDate = dateFormat(this.currentDate, 2) + 24 * 60 * 60 * 1000;
     nextDate = dateFormat(nextDate, 5);
     Object.keys(this.futureDates).map((stockId) => {
-      for (let i = 0; i < this.futureDates[stockId].length; i++) {
-        const t = this.futureDates[stockId][i];
-        const res = this.dateSaveInHistory(stockId, nextDate, t);
-        if (!res) break;
+      if (this.futureDates[stockId].length > 0) {
+        for (let i = 0; i < this.futureDates[stockId].length; i++) {
+          const t = this.futureDates[stockId][i];
+          const res = this.dateSaveInHistory(stockId, nextDate, t);
+          if (!res) break;
+        }
       }
       return false;
     });
@@ -111,7 +113,9 @@ function getEmptyArrays(data: { [stockId: string]: Data[] }): ResDates {
 function getFirstDate(futureDates: ResDates) {
   const firstDates = [];
   for (const stockId in futureDates) {
-    firstDates.push(futureDates[stockId][0]);
+    if (futureDates[stockId].length > 0) {
+      firstDates.push(futureDates[stockId][0]);
+    }
   }
   return Math.min(...firstDates);
 }
