@@ -1,10 +1,10 @@
 {
-  "name": "@ch20026103/backTest",
+  "name": "@ch20026103/backtest",
   "version": "0.0.1",
   "description": "provide many analyze methods in the library.",
   "keywords": [],
-  "bugs": "git@github.com:cosmic1330/backTest/issues",
-  "repository": "git@github.com:cosmic1330/backTest",
+  "bugs": "git@github.com:cosmic1330/backtest/issues",
+  "repository": "git@github.com:cosmic1330/backtest",
   "license": "ISC",
   "author": "kim <ch20026103@yahoo.com.tw> (https://github.com/cosmic1330)",
   "contributors": [],
@@ -63,6 +63,6 @@
     "node": "16.13.0"
   },
   "dependencies": {
-    "@ch20026103/anysis": "^0.0.1"
+    "@ch20026103/anysis": "^0.0.2-release"
   }
 }
