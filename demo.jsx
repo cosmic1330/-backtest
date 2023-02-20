@@ -68,7 +68,7 @@ function customSellMethod(data) {
   if (
     stockData[stockData.length - 1]["l"] >
       stockData[stockData.length - 2]["l"] &&
-    (stockData[stockData.length - 1]["rsi6"] > 90 ||
+    (stockData[stockData.length - 1]["rsi6"] > 80 ||
       stockData[stockData.length - 2]["rsi6"] > 80)
   ) {
     res.status = true;
@@ -96,7 +96,11 @@ function App() {
   let [inventory, setInventory] = useState("");
 
   const handleClick = () => {
-    context.current.run();
+    for (let i = 0; i < 100; i++) {
+      context.current.run();
+      console.log(context.current.dateSequence.currentDate)
+    }
+    console.log("end")
     setCapital(context.current.capital);
     setProfit(context.current.record.profit);
     setWin(context.current.record.win);
