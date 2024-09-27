@@ -85,10 +85,9 @@ describe("Context", () => {
       return acc;
     }, {} as { [id: string]: Stock });
 
-    context = new Context(stocks, dateSequence, {
-      capital: 10000000,
-      hightStockPrice: 600,
-      hightLoss: 0.05,
+    context = new Context({
+      stocks,
+      dateSequence,
       buyMethod: () => ({
         status: true,
         detail: "test",
@@ -97,8 +96,14 @@ describe("Context", () => {
         status: true,
         detail: "test",
       }),
-      buyPrice: BuyPrice.OPEN,
-      sellPrice: SellPrice.CLOSE,
+      options: {
+        capital: 10000000,
+        hightStockPrice: 600,
+        hightLoss: 0.05,
+
+        buyPrice: BuyPrice.OPEN,
+        sellPrice: SellPrice.CLOSE,
+      },
     });
   });
 

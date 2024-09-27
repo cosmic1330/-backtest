@@ -36,15 +36,17 @@ const dateSequence = new DateSequence([...]);
 
 
 // 定義買入和賣出策略
-const buyMethod = (data) => { ... };
-const sellMethod = (data) => { ... };
+const buyMethod = function(data){ ... };
+const sellMethod = function(data){ ... };
 
 // 創建回測上下文
-const context = new Context(stocks, dateSequence, {
-  capital: 100000,
+const context = new Context({stocks, dateSequence,
   buyMethod,
   sellMethod,
-  // 其他選項...
+  options:{
+    capital: 100000,
+    // 其他選項...
+  }
 });
 
 // 運行回測
@@ -59,6 +61,7 @@ console.log(context.record.getPerformance());
 歡迎提交 Pull Requests 來幫助改進這個項目。對於重大更改,請先開 issue 討論您想要改變的內容。
 
 ## 許可證
+
 MIT
 
 ## 作者

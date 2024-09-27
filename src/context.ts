@@ -20,15 +20,14 @@ export enum SellPrice {
 }
 
 type Options = {
+  marketSentiment?: () => boolean;
   handlingFeeRebate?: number;
   limitHandlingFee?: number;
   capital?: number;
   hightStockPrice?: number;
   hightLoss?: number;
-  buyMethod: (data: StockListType) => LogicResType;
-  sellMethod: (data: StockListType) => LogicResType;
-  reviewPurchaseListMethod?: (data: StockListType) => LogicResType;
-  reviewSellListMethod?: (data: StockListType) => LogicResType;
+  reviewPurchaseListMethod?: (data: StockListType) => boolean;
+  reviewSellListMethod?: (data: StockListType) => boolean;
   buyPrice?: BuyPrice;
   sellPrice?: SellPrice;
 };
@@ -46,25 +45,36 @@ export default class Context {
   sellMethod: (data: StockListType) => LogicResType; // 賣出判斷方法
   buyPrice: BuyPrice; // 買入價格
   sellPrice: SellPrice; // 賣出價格
-  reviewPurchaseListMethod?: (data: StockListType) => LogicResType; // 買入清單檢查方法
-  reviewSellListMethod?: (data: StockListType) => LogicResType; // 賣出清單檢查方法
+  reviewPurchaseListMethod: (data: StockListType) => boolean; // 買入清單檢查方法
+  reviewSellListMethod: (data: StockListType) => boolean; // 賣出清單檢查方法
+  marketSentiment: () => boolean; // 市場情緒
 
-  constructor(
-    stocks: { [id: string]: Stock },
-    dateSequence: DateSequence,
-    options: Options
-  ) {
+  constructor({
+    stocks,
+    dateSequence,
+    sellMethod,
+    buyMethod,
+    options,
+  }: {
+    stocks: { [id: string]: Stock };
+    dateSequence: DateSequence;
+    sellMethod: (data: StockListType) => LogicResType;
+    buyMethod: (data: StockListType) => LogicResType;
+    options?: Options;
+  }) {
     this.stocks = stocks;
     this.unSoldProfit = 0;
     this.capital = options?.capital ? options.capital : 300000;
     this.hightStockPrice = options?.hightStockPrice;
     this.hightLoss = options?.hightLoss ? options.hightLoss : 0.1;
-    this.buyPrice = options.buyPrice || BuyPrice.OPEN;
-    this.sellPrice = options.sellPrice || SellPrice.LOW;
-    this.sellMethod = options.sellMethod;
-    this.buyMethod = options.buyMethod;
-    this.reviewPurchaseListMethod = options.reviewPurchaseListMethod;
-    this.reviewSellListMethod = options.reviewSellListMethod;
+    this.buyPrice = options?.buyPrice || BuyPrice.OPEN;
+    this.sellPrice = options?.sellPrice || SellPrice.LOW;
+    this.sellMethod = sellMethod;
+    this.buyMethod = buyMethod;
+    this.reviewPurchaseListMethod =
+      options?.reviewPurchaseListMethod || (() => true);
+    this.reviewSellListMethod = options?.reviewSellListMethod || (() => true);
+    this.marketSentiment = options?.marketSentiment || (() => true);
 
     this.transaction = new Transaction({
       handlingFeeRebate: options?.handlingFeeRebate,
@@ -76,6 +86,9 @@ export default class Context {
   }
 
   buy() {
+    // 市場情緒不好 跳過
+    if (!this.marketSentiment()) return;
+
     const stocks = Object.values(this.stocks);
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
@@ -91,8 +104,9 @@ export default class Context {
       const buyPrice = this.transaction.getBuyPrice(
         stock.currentData[this.buyPrice]
       );
-      // 在待購清單內且本金足夠買盤價則買入
+      // 在待購清單內且本金足夠買盤價、符合買入清單檢查方法 買入
       if (
+        this.reviewPurchaseListMethod(stock.historyData) &&
         this.record.getWaitPurchasedStockId(stock.id) &&
         this.capital - buyPrice > 0
       ) {
@@ -127,8 +141,11 @@ export default class Context {
       const sellPrice = this.transaction.getSellPrice(
         stock.currentData[this.sellPrice]
       );
-      // 在待售清單內 賣出
-      if (this.record.getWaitSaleStockId(stock.id)) {
+      // 在待售清單內且符合賣出清單檢查方法 賣出
+      if (
+        this.reviewSellListMethod(stock.historyData) &&
+        this.record.getWaitSaleStockId(stock.id)
+      ) {
         this.record.remove(stock.id, stock.currentData, sellPrice);
         this.capital += sellPrice;
         continue;
@@ -179,7 +196,7 @@ export default class Context {
       const stockId = stockIds[i];
       const currentStock = this.stocks[stockId];
       if (currentStock && currentStock.currentData) {
-        const price = currentStock.currentData[this.sellPrice];
+        const price = currentStock.currentData.c;
         const sellNowPrice = this.transaction.getSellPrice(price);
         const buyData = this.record.getInventoryStockIdData(stockId);
         unSoldProfit += sellNowPrice - buyData.buyPrice;
