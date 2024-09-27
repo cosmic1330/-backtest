@@ -339,7 +339,7 @@ export default class Stock {
     this.historyData = [];
     this.currentData = undefined;
     this.dateSequence = dateSequence;
-    this.dateSequence.attach(this);
+    this.dateSequence.bind(this);
   }
 
   generat() {

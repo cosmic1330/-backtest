@@ -25,6 +25,10 @@ export default class DateSequence {
     this.stopDate = stopDate;
   }
 
+  bind(observer: Observer) {
+    this.observers.unshift(observer);
+  }
+
   attach(observer: Observer) {
     this.observers.push(observer);
   }
@@ -37,14 +41,16 @@ export default class DateSequence {
 
   next() {
     if (this.futureDates.length > 0) {
-      if (this.stopDate && this.futureDates[0] > this.stopDate) return;
+      if (this.stopDate && this.futureDates[0] > this.stopDate) return false;
 
       const data = this.futureDates.shift();
       if (data) {
         this.currentDate = data;
         this.historyDates.push(data);
         this.notifyAllObservers();
+        return true;
       }
     }
+    return false;
   }
 }

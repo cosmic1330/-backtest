@@ -97,4 +97,50 @@ describe("Stock", () => {
     expect(stock.futureData[0].t).toBe(20230102);
     expect(stock.futureData.length).toBe(2);
   });
+
+  it("應該正確更新後來綁定的股票對象", () => {
+    const mockStock1 = new Stock({
+      dateSequence,
+      id: "1",
+      name: "Stock 1",
+      data: [
+        { t: 20230101, o: 100, h: 110, l: 95, c: 105, v: 1000 },
+        { t: 20230102, o: 105, h: 115, l: 100, c: 110, v: 1200 },
+        { t: 20230103, o: 110, h: 120, l: 105, c: 115, v: 1100 },
+      ],
+    });
+    dateSequence.next(); // 移動到 20200729
+
+    console.log(mockStock1);
+    const mockStock2 = new Stock({
+      dateSequence,
+      id: "2",
+      name: "Stock 2",
+      data: [
+        { t: 20230101, o: 200, h: 210, l: 195, c: 205, v: 2000 },
+        { t: 20230102, o: 205, h: 215, l: 200, c: 210, v: 2200 },
+        { t: 20230103, o: 210, h: 220, l: 205, c: 215, v: 2100 },
+      ],
+    });
+
+    dateSequence.next(); // 移動到 20230102
+
+    expect(mockStock1.currentData?.t).toBe(20230102);
+    expect(mockStock1.historyData.length).toBe(2);
+    expect(mockStock1.futureData.length).toBe(1);
+
+    expect(mockStock2.currentData?.t).toBe(20230102);
+    expect(mockStock2.historyData.length).toBe(2);
+    expect(mockStock2.futureData.length).toBe(1);
+
+    dateSequence.next(); // 移動到 20230103
+
+    expect(mockStock1.currentData?.t).toBe(20230103);
+    expect(mockStock1.historyData.length).toBe(3);
+    expect(mockStock1.futureData.length).toBe(0);
+
+    expect(mockStock2.currentData?.t).toBe(20230103);
+    expect(mockStock2.historyData.length).toBe(3);
+    expect(mockStock2.futureData.length).toBe(0);
+  });
 });

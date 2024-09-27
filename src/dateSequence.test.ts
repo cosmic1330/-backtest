@@ -1,4 +1,5 @@
 import DateSequence from "./dateSequence";
+import Stock from "./stock";
 
 describe("DateSequence", () => {
   let testData: number[] = [];
@@ -25,10 +26,14 @@ describe("DateSequence", () => {
 
   it("應該在到達最後一個日期後停止", () => {
     const dateSequence = new DateSequence({ data: testData });
-    dateSequence.next();
-    dateSequence.next();
-    dateSequence.next();
-    dateSequence.next(); // 應該沒有效果
+     const status1 = dateSequence.next();
+     const status2 = dateSequence.next();
+     const status3 = dateSequence.next();
+     const status4 = dateSequence.next(); // 應該沒有效果
+     expect(status1).toBeTruthy();
+     expect(status2).toBeTruthy();
+     expect(status3).toBeTruthy();
+     expect(status4).toBeFalsy();
 
     expect(dateSequence.currentDate).toBe(20200731);
     expect(dateSequence.futureDates).toEqual([]);
@@ -40,9 +45,12 @@ describe("DateSequence", () => {
       data: testData,
       stopDate: 20200730,
     });
-    dateSequence.next();
-    dateSequence.next();
-    dateSequence.next(); // 應該沒有效果
+    const status1 = dateSequence.next();
+    const status2 = dateSequence.next();
+    const status3 = dateSequence.next(); // 應該沒有效果
+    expect(status1).toBeTruthy();
+    expect(status2).toBeTruthy();
+    expect(status3).toBeFalsy();
 
     expect(dateSequence.currentDate).toBe(20200730);
     expect(dateSequence.futureDates).toEqual([20200731]);
@@ -60,4 +68,23 @@ describe("DateSequence", () => {
     expect(mockObserver1.update).toHaveBeenCalledTimes(1);
     expect(mockObserver2.update).toHaveBeenCalledTimes(1);
   });
+
+  it("應該正確使用bind方法添加觀察者並優先通知", () => {
+    const dateSequence = new DateSequence({ data: testData });
+    const mockObserver1 = { update: vi.fn() };
+    const mockObserver2 = { update: vi.fn() };
+    const mockObserver3 = { update: vi.fn() };
+    
+    dateSequence.attach(mockObserver1);
+    dateSequence.bind(mockObserver2);
+    dateSequence.attach(mockObserver3);
+    
+    dateSequence.next();
+
+    // 檢查是否所有觀察者都被通知
+    expect(mockObserver1.update).toHaveBeenCalledTimes(1);
+    expect(mockObserver2.update).toHaveBeenCalledTimes(1);
+    expect(mockObserver3.update).toHaveBeenCalledTimes(1);
+  });
+
 });

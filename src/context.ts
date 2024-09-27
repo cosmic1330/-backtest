@@ -186,7 +186,7 @@ export default class Context {
   }
 
   run() {
-    this.dateSequence.next();
+    return this.dateSequence.next();
   }
 
   calcUnSoldProfit() {
