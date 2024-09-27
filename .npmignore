@@ -13,3 +13,5 @@ demo.jsx
 index.html
 .vscode
 .husky
+example
+server.js

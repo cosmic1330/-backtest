@@ -1,6 +1,6 @@
 {
   "name": "@ch20026103/backtest",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha",
   "description": "provide many analyze methods in the library.",
   "keywords": [],
   "bugs": "git@github.com:cosmic1330/backtest/issues",
@@ -63,6 +63,8 @@
     "node": "16.13.0"
   },
   "dependencies": {
-    "@ch20026103/anysis": "^0.0.2-release"
+    "@ch20026103/anysis": "^0.0.16-alpha",
+    "express": "^4.21.0",
+    "node-fetch": "^3.3.2"
   }
 }

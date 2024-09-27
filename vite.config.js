@@ -8,6 +8,5 @@ export default defineConfig({
     global: true,
     environment: "jsdom",
   },
-  // 添加以下配置
   root: 'example',
 });

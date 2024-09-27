@@ -1,107 +1,28 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import data from "../data/data.json";
-import { Context } from "../dist/esm/index";
 
 ReactDOM.render(<App />, document.getElementById("root"));
 
 // 客製化
-function customBuyMethod(data) {
-  let ma = new Ma();
-  let macd = new Macd();
-  let rsi = new Rsi();
-  let kd = new Kd();
-  let williams = new Williams();
-  // m1
-  let rsiData = rsi.getAllRsi(data);
-  let williamsData = williams.getAllWillams(data);
-  // m2
-  // const Ema26 = macd.getEMA26(data);
-  // const Ema12 = macd.getEMA12(data);
-  // const Dif = macd.getDIF(data, Ema12, Ema26);
-  // const Macd9 = macd.getMACD9(data, Dif);
-
-  // let ma10Data = ma.getMa10(data);
-  // let ma5Data = ma.getMa5(data);
-  // let ma20Data = ma.getMa20(data);
-  // let ma60Data = ma.getMa60(data);
-  // let rsiData = rsi.getAllRsi(data);
-  // let kdData = kd.getKD(data);
-  let res = {
-    status: false,
-    detail: "Not up to standard",
+function buyMethod(data) {
+  console.log(data);
+  const res = {
+    status: true,
+    detail: `buyMethod`,
   };
-  if (
-    // m1:
-    (williamsData[williamsData.length - 2].williams9 < -80 ||
-      williamsData[williamsData.length - 3].williams9 < -80||
-      williamsData[williamsData.length - 4].williams9 < -80) &&
-    (williamsData[williamsData.length - 2].williams18 < -80 ||
-      williamsData[williamsData.length - 3].williams18 < -80||
-      williamsData[williamsData.length - 4].williams9 < -80) &&
-      (rsiData[rsiData.length - 1].rsi6>rsiData[rsiData.length - 1].rsi12) &&
-      (rsiData[rsiData.length - 2].rsi6<rsiData[rsiData.length - 2].rsi12)
-
-    // m2:
-    // data[data.length - 1]["v"] > 1500 &&
-    // data[data.length - 2]["v"] > 1500 &&
-    // kdData[data.length - 1]["k-d"] > 3 &&
-    // kdData[data.length - 1]["k"] > 50 &&
-    // kdData[data.length - 1]["k"] > kdData[data.length - 1]["d"] &&
-    // kdData[data.length - 2]["k"] < kdData[data.length - 2]["d"] &&
-    // Dif[data.length - 1]["DIF"] > 0 &&
-    // Macd9[data.length - 1]["MACD9"] > 0 &&
-    // Macd9[data.length - 1]["OSC"] > Macd9[data.length - 2]["OSC"] &&
-    // Macd9[data.length - 1]["OSC"] > Macd9[data.length - 3]["OSC"] &&
-    // Macd9[data.length - 1]["OSC"] > Macd9[data.length - 4]["OSC"] &&
-    // data[data.length - 1]["c"] > ma10Data[ma10Data.length - 1]["ma10"] &&
-    // ma5Data[ma5Data.length - 1]["ma5"] >
-    //   ma20Data[ma20Data.length - 1]["ma20"] &&
-    // ma20Data[ma20Data.length - 1]["ma20"] >
-    //   ma60Data[ma60Data.length - 1]["ma60"] &&
-    // ma5Data[ma5Data.length - 1]["ma5"] >
-    //   ma60Data[ma60Data.length - 1]["ma60"] &&
-    // rsiData[rsiData.length - 1]["rsi6"] < 75 &&
-    // rsiData[rsiData.length - 1]["rsi6"] > 30
-  ) {
-    res.status = true;
-    res.detail = `no message`;
-  }
   return res;
 }
-
-function customSellMethod(data) {
-  let rsi = new Rsi();
-  let williams = new Williams();
-  let stockData = rsi.getAllRsi(data);
-  stockData = williams.getAllWillams(stockData);
-
-  let res = {
-    status: false,
-    detail: "Not up to standard",
+function sellMethod(data) {
+  console.log(data);
+  const res = {
+    status: true,
+    detail: `sellMethod`,
   };
-  if (
-    stockData[stockData.length - 1]["l"] >
-      stockData[stockData.length - 2]["l"] &&
-    (stockData[stockData.length - 1]["rsi6"] > 80 ||
-      stockData[stockData.length - 2]["rsi6"] > 80)
-  ) {
-    res.status = true;
-    res.detail = `rsi減弱＋股價破低`;
-  }
   return res;
 }
 
 function App() {
-  const context = useRef(
-    new Context(data, {
-      hightLoss: 0.15,
-      customBuyMethod,
-      customSellMethod,
-      // startDate: 20221201,
-      // endDate: 20230218,
-    })
-  );
+  const [context, setContext] = useState();
   let [show, setShow] = useState("");
   let [profit, setProfit] = useState("");
   let [capital, setCapital] = useState("");
@@ -131,6 +52,20 @@ function App() {
   const handleShowInventory = () => {
     setInventory(JSON.stringify(context.current.record.inventory, 0, 2));
   };
+
+  useEffect(() => {
+    fetch(
+      `https://tw.quote.finance.yahoo.net/quote/q?type=ta&perd=d&mkt=10&sym=2330&v=1&callback=`,
+    )
+      .then((response) => {
+        console.log(response);
+        return response.json(); // 將回應轉換為 JSON 格式
+      })
+      .then((data) => console.log(data)) // 處理資料
+      .catch((error) =>
+        console.error("There was a problem with the fetch operation:", error)
+      );
+  }, []);
 
   return (
     <div>
