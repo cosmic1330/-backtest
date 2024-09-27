@@ -1,4 +1,3 @@
-import { Kd, Ma, Macd, Rsi, Williams } from "@ch20026103/anysis";
 import React, { useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import data from "../data/data.json";

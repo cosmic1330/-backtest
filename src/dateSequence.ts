@@ -1,121 +1,50 @@
-import { dateFormat } from "@ch20026103/anysis";
-import type { Data } from "./types";
+export type DatesData = number;
 
-type ResDates = { [stockId: string]: number[] };
+interface DateSequenceConstructorType {
+  stopDate?: DatesData;
+  data: DatesData[];
+}
 
-export interface DateSequenceConstructorType {
-  startDate?: number;
-  endDate?: number;
-  data: { [stockId: string]: Data[] };
+interface Observer {
+  update(currentDate: DatesData | undefined): void;
 }
 
 export default class DateSequence {
   // types
-  DatesData: { [stockId: string]: { [date: string]: Data } };
-  futureDates: ResDates;
-  historyDates: ResDates;
-  currentDate: number;
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  observers: any[];
-  stopDate?: number;
+  futureDates: DatesData[];
+  historyDates: DatesData[];
+  currentDate: DatesData | undefined;
+  stopDate?: DatesData;
+  observers: Observer[];
 
-  constructor({ data, startDate, endDate }: DateSequenceConstructorType) {
-    this.DatesData = getDatesData(data);
-    this.futureDates = getDates(data);
-    this.historyDates = getEmptyArrays(data);
-    this.currentDate = startDate || getFirstDate(this.futureDates);
+  constructor({ data, stopDate }: DateSequenceConstructorType) {
+    this.futureDates = data;
+    this.historyDates = [];
+    this.currentDate = undefined;
     this.observers = [];
-    this.stopDate = endDate;
+    this.stopDate = stopDate;
   }
 
-  getHistoryData(stockId: string): Data[] {
-    const allDates = this.historyDates[stockId];
-    const res: Data[] = [];
-    allDates.forEach((item) => {
-      const filterData = this.DatesData[stockId][item];
-      res.push(filterData);
-    });
-    return res;
-  }
-
-  attach(observer: any) {
+  attach(observer: Observer) {
     this.observers.push(observer);
   }
 
   notifyAllObservers() {
     this.observers.forEach((observer) => {
-      observer.update();
+      observer.update(this.currentDate);
     });
   }
 
-  setNext() {
-    if (this.stopDate && this.currentDate > this.stopDate) return;
+  next() {
+    if (this.futureDates.length > 0) {
+      if (this.stopDate && this.futureDates[0] > this.stopDate) return;
 
-    let nextDate = dateFormat(this.currentDate, 2) + 24 * 60 * 60 * 1000;
-    nextDate = dateFormat(nextDate, 5);
-    Object.keys(this.futureDates).map((stockId) => {
-      if (this.futureDates[stockId].length > 0) {
-        for (let i = 0; i < this.futureDates[stockId].length; i++) {
-          const t = this.futureDates[stockId][i];
-          const res = this.dateSaveInHistory(stockId, nextDate, t);
-          if (!res) break;
-        }
+      const data = this.futureDates.shift();
+      if (data) {
+        this.currentDate = data;
+        this.historyDates.push(data);
+        this.notifyAllObservers();
       }
-      return false;
-    });
-    this.currentDate = nextDate;
-    this.notifyAllObservers();
-  }
-
-  dateSaveInHistory(stockId: string, nextDate: number, t: number) {
-    if (t < nextDate) {
-      this.historyDates[stockId].push(t);
-      this.futureDates[stockId].shift();
-      return true;
-    } else {
-      return false;
     }
   }
-}
-
-function getDatesData(data: { [stockId: string]: Data[] }): {
-  [stockId: string]: { [date: string]: Data };
-} {
-  const res: {
-    [stockId: string]: { [date: string]: Data };
-  } = {};
-  for (const stockId in data) {
-    res[stockId] = {};
-    data[stockId].map((item) => {
-      res[stockId][item.t] = item;
-    });
-  }
-  return res;
-}
-
-function getDates(data: { [stockId: string]: Data[] }): ResDates {
-  const res: ResDates = {};
-  for (const stockId in data) {
-    const dates = data[stockId].map((item) => item.t);
-    res[stockId] = dates;
-  }
-  return res;
-}
-
-function getEmptyArrays(data: { [stockId: string]: Data[] }): ResDates {
-  const res: ResDates = {};
-  for (const stockId in data) {
-    res[stockId] = [];
-  }
-  return res;
-}
-
-function getFirstDate(futureDates: ResDates) {
-  const firstDates = [];
-  for (const stockId in futureDates) {
-    if (futureDates[stockId].length > 0) {
-      firstDates.push(futureDates[stockId][0]);
-    }
-  }
-  return Math.min(...firstDates);
 }

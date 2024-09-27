@@ -1,5 +1,5 @@
-import type { Data } from "./types";
-type InventoryItem = Data & {
+import type { StockType } from "@ch20026103/anysis/dist/esm/stockSkills/types";
+type InventoryItem = StockType & {
   detail: string;
   method: string;
   buyPrice: number;
@@ -34,24 +34,24 @@ export default class Record {
     this.waitPurchased = {};
   }
 
-  save(key: string, value: Data, buyPrice: number) {
-    this.inventory[key] = { ...value, ...this.waitPurchased[key], buyPrice };
+  save(id: string, value: StockType, buyPrice: number) {
+    this.inventory[id] = { ...value, ...this.waitPurchased[id], buyPrice };
     // clear
-    delete this.waitPurchased[key];
+    delete this.waitPurchased[id];
   }
 
-  remove(key: string, value: Data, sellPrice: number) {
+  remove(id: string, value: StockType, sellPrice: number) {
     const res = {
-      buy: this.inventory[key],
+      buy: this.inventory[id],
       sell: {
         ...value,
-        ...this.waitSale[key],
+        ...this.waitSale[id],
         sellPrice,
       },
     };
     this.history.push(res);
     // calculate
-    const profit = sellPrice - this.inventory[key].buyPrice;
+    const profit = sellPrice - this.inventory[id].buyPrice;
     if (profit > 0) {
       this.win += 1;
       this.profit += profit;
@@ -60,8 +60,8 @@ export default class Record {
       this.profit += profit;
     }
     // clear
-    delete this.inventory[key];
-    delete this.waitSale[key];
+    delete this.inventory[id];
+    delete this.waitSale[id];
   }
 
   saveWaitPurchased(key: string, value: WaitPurchasedItem) {
