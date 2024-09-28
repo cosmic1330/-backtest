@@ -169,4 +169,49 @@ describe("Context", () => {
     expect(context.unSoldProfit).toBe(0);
     expect(context.record.profit).toBe(890);
   });
+
+  it("绑定新股票", () => {
+    const newStockData = [
+      {
+        o: 100,
+        l: 98,
+        h: 102,
+        c: 101,
+        v: 20000,
+        t: 20200729,
+      },
+      {
+        o: 101,
+        l: 99,
+        h: 103,
+        c: 102,
+        v: 22000,
+        t: 20200730,
+      },
+      {
+        o: 101,
+        l: 99,
+        h: 103,
+        c: 102,
+        v: 22000,
+        t: 20200731,
+      },
+    ];
+    context.run();
+    expect(context.dateSequence.currentDate).toBe(20200729);
+    expect(context.stocks["1101"].currentData?.t).toBe(20200729);
+
+    context.bind("3008", "大立光", newStockData);
+    expect(context.stocks["3008"]).toBeDefined();
+    expect(context.stocks["3008"].id).toBe("3008");
+    expect(context.stocks["3008"].name).toBe("大立光");
+    expect(context.stocks["3008"].futureData.length).toBe(3);
+    expect(context.stocks["3008"].dateSequence).toBe(context.dateSequence);
+    expect(context.stocks["3008"].currentData?.t).toBeUndefined();
+    context.run();
+    expect(context.stocks["3008"].futureData.length).toBe(1);
+    expect(context.dateSequence.currentDate).toBe(20200730);
+    expect(context.stocks["1101"].currentData?.t).toBe(20200730);
+    expect(context.stocks["3008"].currentData?.t).toBe(20200730);
+  });
 });

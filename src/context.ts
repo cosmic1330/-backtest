@@ -85,6 +85,16 @@ export default class Context {
     this.dateSequence.attach(this);
   }
 
+  bind(id: string, name: string, data: StockListType) {
+    const stock = new Stock({
+      id,
+      name,
+      data,
+      dateSequence: this.dateSequence,
+    });
+    this.stocks[id] = stock;
+  }
+
   buy() {
     // 市場情緒不好 跳過
     if (!this.marketSentiment()) return;
