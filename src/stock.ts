@@ -363,6 +363,7 @@ export default class Stock {
   }
 
   update(currentDate: DatesData | undefined) {
+    if(!this?.futureData[0]?.t) return;
     if (currentDate === this.futureData[0].t) {
       this.generat();
     } else if (
