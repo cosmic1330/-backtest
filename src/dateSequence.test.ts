@@ -87,4 +87,21 @@ describe("DateSequence", () => {
     expect(mockObserver3.update).toHaveBeenCalledTimes(1);
   });
 
+  // 添加新的測試用例
+  it("應該正確執行初始化方法", () => {
+    const dateSequence = new DateSequence({ data: testData });
+    dateSequence.next(); // 移動到第一個日期
+    dateSequence.next(); // 移動到第二個日期
+
+    expect(dateSequence.currentDate).toBe(20200730);
+    expect(dateSequence.futureDates).toEqual([20200731]);
+    expect(dateSequence.historyDates).toEqual([20200729, 20200730]);
+
+    dateSequence.init(); // 執行初始化方法
+
+    expect(dateSequence.currentDate).toBe(undefined);
+    expect(dateSequence.futureDates).toEqual([20200729, 20200730, 20200731]);
+    expect(dateSequence.historyDates).toEqual([]);
+  });
+
 });

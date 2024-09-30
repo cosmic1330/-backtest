@@ -5,7 +5,6 @@ import {
   Kd,
   Ma,
   Macd,
-  Obv,
   Rsi,
   Williams,
 } from "@ch20026103/anysis";
@@ -13,7 +12,6 @@ import { EmaResType } from "@ch20026103/anysis/dist/esm/stockSkills/ema";
 import { KdResType } from "@ch20026103/anysis/dist/esm/stockSkills/kd";
 import { MaResType } from "@ch20026103/anysis/dist/esm/stockSkills/ma";
 import { MacdResType } from "@ch20026103/anysis/dist/esm/stockSkills/macd";
-import { ObvResType } from "@ch20026103/anysis/dist/esm/stockSkills/obv";
 import { RsiResType } from "@ch20026103/anysis/dist/esm/stockSkills/rsi";
 import type {
   StockListType,
@@ -35,7 +33,6 @@ class TechnicalIndicators {
   ma240: Ma;
   kd: Kd;
   macd: Macd;
-  obv: Obv;
   rsi5: Rsi;
   rsi10: Rsi;
   williams8: Williams;
@@ -53,7 +50,6 @@ class TechnicalIndicators {
   ma240_data: MaResType;
   kd_data: KdResType;
   macd_data: MacdResType;
-  obv_data: ObvResType;
   rsi5_data: RsiResType;
   rsi10_data: RsiResType;
   williams8_data: WilliamsResType;
@@ -72,7 +68,6 @@ class TechnicalIndicators {
     this.ma240 = new Ma();
     this.kd = new Kd();
     this.macd = new Macd();
-    this.obv = new Obv();
     this.rsi5 = new Rsi();
     this.rsi10 = new Rsi();
     this.williams8 = new Williams();
@@ -175,14 +170,6 @@ class TechnicalIndicators {
       macd: 0,
       osc: 0,
     };
-    this.obv_data = {
-      dataset: [],
-      obv: 0,
-      obvList: [],
-      preClose: 0,
-      obvMa: 0,
-      type: 5,
-    };
     this.rsi5_data = {
       dataset: [],
       rsi: 0,
@@ -222,7 +209,6 @@ class TechnicalIndicators {
     this.ma240_data = this.ma240.init(value, 240);
     this.kd_data = this.kd.init(value, 9);
     this.macd_data = this.macd.init(value);
-    this.obv_data = this.obv.init(value, 5);
     this.rsi5_data = this.rsi5.init(value, 5);
     this.rsi10_data = this.rsi10.init(value, 10);
     this.williams8_data = this.williams8.init(value, 8);
@@ -250,8 +236,6 @@ class TechnicalIndicators {
       dif: this.macd_data.dif,
       ema12: this.macd_data.ema12,
       ema26: this.macd_data.ema26,
-      obv: this.obv_data.obv,
-      obv5Ma: this.obv_data.obvMa,
       rsi5: this.rsi5_data.rsi,
       rsi10: this.rsi10_data.rsi,
       williams8: this.williams8_data.williams,
@@ -272,7 +256,6 @@ class TechnicalIndicators {
     this.ma240_data = this.ma240.next(value, this.ma240_data, 240);
     this.kd_data = this.kd.next(value, this.kd_data, 9);
     this.macd_data = this.macd.next(value, this.macd_data);
-    this.obv_data = this.obv.next(value, this.obv_data, 5);
     this.rsi5_data = this.rsi5.next(value, this.rsi5_data, 5);
     this.rsi10_data = this.rsi10.next(value, this.rsi10_data, 10);
     this.williams8_data = this.williams8.next(value, this.williams8_data, 8);
@@ -304,8 +287,6 @@ class TechnicalIndicators {
       dif: this.macd_data.dif,
       ema12: this.macd_data.ema12,
       ema26: this.macd_data.ema26,
-      obv: this.obv_data.obv,
-      obv5Ma: this.obv_data.obvMa,
       rsi5: this.rsi5_data.rsi,
       rsi10: this.rsi10_data.rsi,
       williams8: this.williams8_data.williams,
@@ -314,26 +295,19 @@ class TechnicalIndicators {
   }
 }
 
-interface StockConstructorType {
+interface MarketConstructorType {
   dateSequence: DateSequence;
-  id: string;
-  name: string;
   data: StockListType;
 }
 
-export default class Stock {
-  // types
-  id: string;
-  name: string;
+export default class Market {
   dateSequence: DateSequence;
   futureData: StockListType;
   historyData: StockListType;
   currentData: StockType | undefined;
   technicalIndicators: TechnicalIndicators;
 
-  constructor({ data, dateSequence, id, name }: StockConstructorType) {
-    this.id = id;
-    this.name = name;
+  constructor({ data, dateSequence }: MarketConstructorType) {
     this.technicalIndicators = new TechnicalIndicators();
     this.futureData = data;
     this.historyData = [];
@@ -369,7 +343,7 @@ export default class Stock {
   }
 
   update(currentDate: DatesData | undefined) {
-    if (!this?.futureData[0]?.t) return;
+    if(!this?.futureData[0]?.t) return;
     if (currentDate === this.futureData[0].t) {
       this.generat();
     } else if (

@@ -5,7 +5,8 @@ import Stock from "./stock";
 
 describe("Context", () => {
   let context: Context;
-
+  let dateSequence: DateSequence;
+  let stocks: { [id: string]: Stock };
   beforeEach(() => {
     const mockStockData = {
       "1101": [
@@ -44,43 +45,43 @@ describe("Context", () => {
       ],
       "2330": [
         {
-          o: 45.2,
-          l: 44.95,
-          h: 45.4,
-          c: 45.35,
+          o: 845.2,
+          l: 844.95,
+          h: 845.4,
+          c: 845.35,
           v: 10001,
           t: 20200729,
         },
         {
-          o: 45.5,
-          l: 45.2,
-          h: 45.8,
-          c: 45.6,
+          o: 845.5,
+          l: 845.2,
+          h: 845.8,
+          c: 845.6,
           v: 11000,
           t: 20200730,
         },
         {
-          o: 45.5,
-          l: 45.2,
-          h: 45.8,
-          c: 45.6,
+          o: 845.5,
+          l: 845.2,
+          h: 845.8,
+          c: 845.6,
           v: 11000,
           t: 20200731,
         },
         {
-          o: 45.5,
-          l: 45.2,
-          h: 45.8,
-          c: 45.6,
-          v: 11000,
+          o: 845.5,
+          l: 845.2,
+          h: 845.8,
+          c: 845.6,
+          v: 811000,
           t: 20200801,
         },
       ],
     };
-    const dateSequence = new DateSequence({
+    dateSequence = new DateSequence({
       data: [20200729, 20200730, 20200731, 20200801],
     });
-    const stocks = Object.entries(mockStockData).reduce((acc, [id, data]) => {
+    stocks = Object.entries(mockStockData).reduce((acc, [id, data]) => {
       acc[id] = new Stock({ data, dateSequence, id, name: id + "test" });
       return acc;
     }, {} as { [id: string]: Stock });
@@ -98,7 +99,7 @@ describe("Context", () => {
       }),
       options: {
         capital: 10000000,
-        hightStockPrice: 600,
+        hightStockPrice: 1000,
         hightLoss: 0.05,
 
         buyPrice: BuyPrice.OPEN,
@@ -108,11 +109,19 @@ describe("Context", () => {
   });
 
   it("初始化正確", () => {
+
     expect(context.capital).toBe(10000000);
-    expect(context.hightStockPrice).toBe(600);
+    expect(context.hightStockPrice).toBe(1000);
     expect(context.hightLoss).toBe(0.05);
     expect(context.buyPrice).toBe(BuyPrice.OPEN);
     expect(context.sellPrice).toBe(SellPrice.CLOSE);
+    
+    context.run();
+    context.run();
+    context.init();
+    expect(context.dateSequence.currentDate).toBe(undefined);
+    expect(context.stocks["1101"].currentData?.t).toBe(undefined);
+    expect(context.stocks["2330"].currentData?.t).toBe(undefined);
   });
 
   it("買入股票", () => {
@@ -150,7 +159,7 @@ describe("Context", () => {
     context.run();
     context.run();
     context.run();
-    expect(context.unSoldProfit).toBe(890);
+    expect(context.unSoldProfit).toBe(3292);
   });
 
   it("運行整個流程", () => {
@@ -167,7 +176,7 @@ describe("Context", () => {
     expect(context.record.getInventoryStockId("1101")).toBeFalsy();
     expect(context.record.getInventoryStockId("2330")).toBeFalsy();
     expect(context.unSoldProfit).toBe(0);
-    expect(context.record.profit).toBe(890);
+    expect(context.record.profit).toBe(3292);
   });
 
   it("绑定新股票", () => {
@@ -213,5 +222,40 @@ describe("Context", () => {
     expect(context.dateSequence.currentDate).toBe(20200730);
     expect(context.stocks["1101"].currentData?.t).toBe(20200730);
     expect(context.stocks["3008"].currentData?.t).toBe(20200730);
+  });
+
+  it("测试虧損上限触发卖出", () => {
+    context.run();
+    context.buy();
+    context.stocks["1101"].futureData[0].l = 1;
+    context.stocks["2330"].futureData[0].l = 1;
+    context.run();
+
+    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
+    expect(context.record.getWaitSaleStockId("2330")).toBeTruthy();
+  });
+
+  it("测试updateOptions方法", () => {
+    const newOptions = {
+      capital: 20000000,
+      hightLoss: 0.1,
+      hightStockPrice: 2000,
+      buyPrice: BuyPrice.CLOSE,
+      sellPrice: SellPrice.OPEN,
+      reviewPurchaseListMethod: () => true,
+      reviewSellListMethod: () => true,
+      marketSentiment: () => true,
+    };
+
+    context.updateOptions(newOptions);
+
+    expect(context.capital).toBe(20000000);
+    expect(context.hightLoss).toBe(0.1);
+    expect(context.hightStockPrice).toBe(2000);
+    expect(context.buyPrice).toBe(BuyPrice.CLOSE);
+    expect(context.sellPrice).toBe(SellPrice.OPEN);
+    expect(context.reviewPurchaseListMethod).toBeDefined();
+    expect(context.reviewSellListMethod).toBeDefined();
+    expect(context.marketSentiment).toBeDefined();
   });
 });

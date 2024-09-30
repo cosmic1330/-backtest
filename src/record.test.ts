@@ -113,4 +113,31 @@ describe("Record", () => {
     expect(record.getWaitPurchasedStockId("1")).toBe(true);
     expect(record.getWaitPurchasedStockId("2")).toBe(false);
   });
+
+
+  test("init 方法", () => {
+    // 首先添加一些数据
+    record.saveWaitPurchased("1", {
+      detail: "Test Detail",
+      method: "Test Method",
+    });
+    record.save("1", buyStockData, 90);
+    record.saveWaitSale("1", { detail: "Test Detail", method: "Test Method" });
+    expect(record.getWaitSaleStockId("1")).toBe(true);
+    expect(record.inventory["1"]).toEqual({
+      ...buyStockData,
+      detail: "Test Detail",
+      method: "Test Method",
+      buyPrice: 90,
+    });
+
+    record.init();
+    expect(record.win).toBe(0);
+    expect(record.lose).toBe(0);
+    expect(record.profit).toBe(0);
+    expect(record.inventory).toEqual({});
+    expect(record.history).toEqual([]);
+    expect(record.waitPurchased).toEqual({});
+    expect(record.waitSale).toEqual({});
+  });
 });

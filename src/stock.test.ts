@@ -111,7 +111,6 @@ describe("Stock", () => {
     });
     dateSequence.next(); // 移動到 20200729
 
-    console.log(mockStock1);
     const mockStock2 = new Stock({
       dateSequence,
       id: "2",
@@ -142,5 +141,30 @@ describe("Stock", () => {
     expect(mockStock2.currentData?.t).toBe(20230103);
     expect(mockStock2.historyData.length).toBe(3);
     expect(mockStock2.futureData.length).toBe(0);
+  });
+
+  test("測試init()方法", () => {
+    const stock = new Stock({
+      dateSequence,
+      id: "1",
+      name: "Test Stock",
+      data: stockData,
+    });
+
+    // 先移動日期序列,使股票有一些歷史數據
+    dateSequence.next();
+    dateSequence.next();
+
+    expect(stock.historyData.length).toBe(2);
+    expect(stock.futureData.length).toBe(1);
+
+    // 調用init()方法
+    stock.init();
+
+    // 驗證init()方法的效果
+    expect(stock.currentData).toBeUndefined();
+    expect(stock.historyData).toEqual([]);
+    expect(stock.futureData.length).toBe(3);
+    expect(stock.futureData).toEqual(stockData);
   });
 });

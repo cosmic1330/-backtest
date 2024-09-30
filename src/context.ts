@@ -1,4 +1,5 @@
 import DateSequence from "./dateSequence";
+import Market from "./market";
 import Record from "./record";
 import Stock from "./stock";
 
@@ -20,7 +21,6 @@ export enum SellPrice {
 }
 
 type Options = {
-  marketSentiment?: () => boolean;
   handlingFeeRebate?: number;
   limitHandlingFee?: number;
   capital?: number;
@@ -28,15 +28,17 @@ type Options = {
   hightLoss?: number;
   reviewPurchaseListMethod?: (data: StockListType) => boolean;
   reviewSellListMethod?: (data: StockListType) => boolean;
+  marketSentiment?: (data: StockListType) => boolean;
   buyPrice?: BuyPrice;
   sellPrice?: SellPrice;
+  market?: Market;
 };
 export default class Context {
-  // type
   dateSequence: DateSequence; // 日期模組
   transaction: Transaction; // 交易模組
   record: Record; // 紀錄模組
   stocks: { [id: string]: Stock }; // 股票模組列表
+  market?: Market; // 市場模組
   capital: number; // 本金
   hightLoss: number; // 虧損上限
   unSoldProfit: number; // 未實現損益
@@ -45,9 +47,9 @@ export default class Context {
   sellMethod: (data: StockListType) => LogicResType; // 賣出判斷方法
   buyPrice: BuyPrice; // 買入價格
   sellPrice: SellPrice; // 賣出價格
-  reviewPurchaseListMethod: (data: StockListType) => boolean; // 買入清單檢查方法
-  reviewSellListMethod: (data: StockListType) => boolean; // 賣出清單檢查方法
-  marketSentiment: () => boolean; // 市場情緒
+  reviewPurchaseListMethod?: (data: StockListType) => boolean; // 買入清單檢查方法
+  reviewSellListMethod?: (data: StockListType) => boolean; // 賣出清單檢查方法
+  marketSentiment?: (data: StockListType) => boolean; // 市場情緒判斷方法
 
   constructor({
     stocks,
@@ -71,10 +73,10 @@ export default class Context {
     this.sellPrice = options?.sellPrice || SellPrice.LOW;
     this.sellMethod = sellMethod;
     this.buyMethod = buyMethod;
-    this.reviewPurchaseListMethod =
-      options?.reviewPurchaseListMethod || (() => true);
-    this.reviewSellListMethod = options?.reviewSellListMethod || (() => true);
-    this.marketSentiment = options?.marketSentiment || (() => true);
+    this.reviewPurchaseListMethod = options?.reviewPurchaseListMethod;
+    this.reviewSellListMethod = options?.reviewSellListMethod;
+    this.marketSentiment = options?.marketSentiment;
+    this.market = options?.market;
 
     this.transaction = new Transaction({
       handlingFeeRebate: options?.handlingFeeRebate,
@@ -83,6 +85,16 @@ export default class Context {
     this.record = new Record();
     this.dateSequence = dateSequence;
     this.dateSequence.attach(this);
+  }
+
+  init() {
+    this.unSoldProfit = 0;
+    this.record.init();
+    this.dateSequence.init();
+    Object.values(this.stocks).forEach((stock: Stock) => {
+      stock.init();
+    });
+    this.market?.init();
   }
 
   bind(id: string, name: string, data: StockListType) {
@@ -97,7 +109,12 @@ export default class Context {
 
   buy() {
     // 市場情緒不好 跳過
-    if (!this.marketSentiment()) return;
+    if (
+      this.market !== undefined &&
+      this.marketSentiment !== undefined &&
+      this.marketSentiment(this.market.historyData) === false
+    )
+      return;
 
     const stocks = Object.values(this.stocks);
     for (let i = 0; i < stocks.length; i++) {
@@ -114,9 +131,11 @@ export default class Context {
       const buyPrice = this.transaction.getBuyPrice(
         stock.currentData[this.buyPrice]
       );
+
       // 在待購清單內且本金足夠買盤價、符合買入清單檢查方法 買入
       if (
-        this.reviewPurchaseListMethod(stock.historyData) &&
+        (this.reviewPurchaseListMethod === undefined ||
+          this.reviewPurchaseListMethod(stock.historyData)) &&
         this.record.getWaitPurchasedStockId(stock.id) &&
         this.capital - buyPrice > 0
       ) {
@@ -153,7 +172,8 @@ export default class Context {
       );
       // 在待售清單內且符合賣出清單檢查方法 賣出
       if (
-        this.reviewSellListMethod(stock.historyData) &&
+        (this.reviewSellListMethod === undefined ||
+          this.reviewSellListMethod(stock.historyData)) &&
         this.record.getWaitSaleStockId(stock.id)
       ) {
         this.record.remove(stock.id, stock.currentData, sellPrice);
@@ -213,5 +233,53 @@ export default class Context {
       }
     }
     this.unSoldProfit = unSoldProfit;
+  }
+
+  // 添加新的方法来更新options
+  updateOptions(newOptions: Partial<Options>) {
+    // 更新资本
+    if (newOptions.capital !== undefined) {
+      this.capital = newOptions.capital;
+    }
+
+    // 更新最高亏损
+    if (newOptions.hightLoss !== undefined) {
+      this.hightLoss = newOptions.hightLoss;
+    }
+
+    // 更新股价上限
+    if (newOptions.hightStockPrice !== undefined) {
+      this.hightStockPrice = newOptions.hightStockPrice;
+    }
+
+    // 更新买入价格
+    if (newOptions.buyPrice !== undefined) {
+      this.buyPrice = newOptions.buyPrice;
+    }
+
+    // 更新卖出价格
+    if (newOptions.sellPrice !== undefined) {
+      this.sellPrice = newOptions.sellPrice;
+    }
+
+    // 更新买入清单检查方法
+    if (newOptions.reviewPurchaseListMethod !== undefined) {
+      this.reviewPurchaseListMethod = newOptions.reviewPurchaseListMethod;
+    }
+
+    // 更新卖出清单检查方法
+    if (newOptions.reviewSellListMethod !== undefined) {
+      this.reviewSellListMethod = newOptions.reviewSellListMethod;
+    }
+
+    // 更新市场情绪判断方法
+    if (newOptions.marketSentiment !== undefined) {
+      this.marketSentiment = newOptions.marketSentiment;
+    }
+
+    // 更新市场模块
+    if (newOptions.market !== undefined) {
+      this.market = newOptions.market;
+    }
   }
 }

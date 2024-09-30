@@ -34,6 +34,16 @@ export default class Record {
     this.waitPurchased = {};
   }
 
+  init() {
+    this.inventory = {};
+    this.history = [];
+    this.win = 0;
+    this.lose = 0;
+    this.profit = 0;
+    this.waitSale = {};
+    this.waitPurchased = {};
+  }
+
   save(id: string, value: StockType, buyPrice: number) {
     this.inventory[id] = { ...value, ...this.waitPurchased[id], buyPrice };
     // clear

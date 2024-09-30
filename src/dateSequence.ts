@@ -25,6 +25,12 @@ export default class DateSequence {
     this.stopDate = stopDate;
   }
 
+  init() {
+    this.currentDate = undefined;
+    this.futureDates.unshift(...this.historyDates);
+    this.historyDates = [];
+  }
+
   bind(observer: Observer) {
     this.observers.unshift(observer);
   }
