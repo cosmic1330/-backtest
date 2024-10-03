@@ -50,8 +50,10 @@ export default class Record {
     delete this.waitPurchased[id];
   }
 
-  remove(id: string, value: StockType, sellPrice: number) {
+  remove(id: string, name: string, value: StockType, sellPrice: number) {
     const res = {
+      id,
+      name,
       buy: this.inventory[id],
       sell: {
         ...value,

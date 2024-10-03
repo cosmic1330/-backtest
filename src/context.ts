@@ -42,7 +42,7 @@ export default class Context {
   market?: Market; // 市場模組
   capital: number; // 本金
   copy_capital: number; // 紀錄預設本金
-  hightLoss: number; // 虧損上限
+  hightLoss?: number; // 虧損上限
   unSoldProfit: number; // 未實現損益
   hightStockPrice?: number; // 買入股價上限
   lowStockPrice?: number; // 買入股價上限
@@ -73,7 +73,7 @@ export default class Context {
     this.copy_capital = this.capital;
     this.hightStockPrice = options?.hightStockPrice;
     this.lowStockPrice = options?.lowStockPrice;
-    this.hightLoss = options?.hightLoss ? options.hightLoss : 0.1;
+    this.hightLoss = options?.hightLoss; // 0.1 = 10%
     this.buyPrice = options?.buyPrice || BuyPrice.OPEN;
     this.sellPrice = options?.sellPrice || SellPrice.LOW;
     this.sellMethod = sellMethod;
@@ -158,6 +158,7 @@ export default class Context {
 
       // 如果收盤價漲停 跳過
       if (
+        stock.historyData.length > 1 &&
         stock.historyData[stock.historyData.length - 1].c >
           stock.historyData[stock.historyData.length - 2].c &&
         Math.abs(
@@ -190,6 +191,7 @@ export default class Context {
       if (stock.currentData === undefined) continue;
       // 如果最低價跌停 跳過 (損失規避心理)
       if (
+        stock.historyData.length > 1 &&
         stock.historyData[stock.historyData.length - 1].l <
           stock.historyData[stock.historyData.length - 2].c &&
         Math.abs(
@@ -210,7 +212,7 @@ export default class Context {
           this.reviewSellListMethod(stock.historyData)) &&
         this.record.getWaitSaleStockId(stock.id)
       ) {
-        this.record.remove(stock.id, stock.currentData, sellPrice);
+        this.record.remove(stock.id, stock.name, stock.currentData, sellPrice);
         this.capital += sellPrice;
         continue;
       }
@@ -218,12 +220,13 @@ export default class Context {
       // 超過設定虧損加入待售清單
       const buyData = this.record.getInventoryStockIdData(stock.id);
       if (
+        this.hightLoss &&
         buyData.buyPrice - buyData.buyPrice * this.hightLoss >
         1000 * stock.currentData.l
       ) {
         this.record.saveWaitSale(stock.id, {
           detail: "超過設定虧損",
-          method: "default",
+          method: "hight loss",
         });
         continue;
       }

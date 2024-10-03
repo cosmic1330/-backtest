@@ -9,7 +9,7 @@ describe("Record", () => {
     record = new Record();
     buyStockData = {
       id: "1",
-      name: "Test Stock",
+      name: "Test Stock1",
       c: 100,
       h: 110,
       l: 90,
@@ -19,7 +19,7 @@ describe("Record", () => {
     };
     sellStockData = {
       id: "1",
-      name: "Test Stock",
+      name: "Test Stock2",
       c: 125,
       h: 130,
       l: 120,
@@ -62,7 +62,7 @@ describe("Record", () => {
     });
     record.save("1", buyStockData, 100);
     record.saveWaitSale("1", { detail: "Sell Detail", method: "Sell Method" });
-    record.remove("1", sellStockData, 120);
+    record.remove("1", "Test Stock1", sellStockData, 120);
 
     expect(record.inventory["1"]).toBeUndefined();
     expect(record.waitSale["1"]).toBeUndefined();
@@ -70,6 +70,8 @@ describe("Record", () => {
     expect(record.profit).toBe(20);
     expect(record.history.length).toBe(1);
     expect(record.history[0]).toEqual({
+      id: "1",
+      name: "Test Stock1",
       buy: {
         ...buyStockData,
         detail: "Buy Detail",
@@ -113,7 +115,6 @@ describe("Record", () => {
     expect(record.getWaitPurchasedStockId("1")).toBe(true);
     expect(record.getWaitPurchasedStockId("2")).toBe(false);
   });
-
 
   test("init 方法", () => {
     // 首先添加一些数据

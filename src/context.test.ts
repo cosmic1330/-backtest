@@ -225,14 +225,26 @@ describe("Context", () => {
   });
 
   it("测试虧損上限触发卖出", () => {
+    context.updateOptions({hightLoss: 0.02});
+    context.run();
+    context.buy();
+    context.stocks["1101"].futureData[0].l = 47;
+    context.stocks["2330"].futureData[0].l = 800;
+    context.run();
+
+    expect(context.hightLoss).toBe(0.02);
+    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
+    expect(context.record.getWaitSaleStockId("2330")).toBeTruthy();
+  });
+
+  it("测试跌停無法触发卖出", () => {
     context.run();
     context.buy();
     context.stocks["1101"].futureData[0].l = 1;
     context.stocks["2330"].futureData[0].l = 1;
     context.run();
-
-    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
-    expect(context.record.getWaitSaleStockId("2330")).toBeTruthy();
+    expect(context.record.getWaitSaleStockId("1101")).toBeFalsy();
+    expect(context.record.getWaitSaleStockId("2330")).toBeFalsy();
   });
 
   it("测试updateOptions方法", () => {
