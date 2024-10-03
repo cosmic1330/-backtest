@@ -1,6 +1,6 @@
 {
   "name": "@ch20026103/backtest",
-  "version": "0.0.4-alpha",
+  "version": "0.0.4-beta",
   "description": "provide many analyze methods in the library.",
   "keywords": [],
   "bugs": "git@github.com:cosmic1330/backtest/issues",
