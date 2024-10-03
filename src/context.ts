@@ -156,6 +156,19 @@ export default class Context {
       // 如果最高價超過資金上限 跳過
       if (buyPrice > this.capital) continue;
 
+      // 如果收盤價漲停 跳過
+      if (
+        stock.historyData[stock.historyData.length - 1].c >
+          stock.historyData[stock.historyData.length - 2].c &&
+        Math.abs(
+          ((stock.historyData[stock.historyData.length - 1].c -
+            stock.historyData[stock.historyData.length - 2].c) /
+            stock.historyData[stock.historyData.length - 2].c) *
+            100
+        ) > 9.5
+      )
+        continue;
+
       // 達到買入條件加入待購清單
       const res = this.buyMethod(stock.historyData);
       if (res.status) {
@@ -175,6 +188,18 @@ export default class Context {
       if (!this.record.getInventoryStockId(stock.id)) continue;
       // 如果currentData不存在 跳過
       if (stock.currentData === undefined) continue;
+      // 如果最低價跌停 跳過 (損失規避心理)
+      if (
+        stock.historyData[stock.historyData.length - 1].l <
+          stock.historyData[stock.historyData.length - 2].c &&
+        Math.abs(
+          ((stock.historyData[stock.historyData.length - 2].c -
+            stock.historyData[stock.historyData.length - 1].l) /
+            stock.historyData[stock.historyData.length - 1].l) *
+            100
+        ) > 9.5
+      )
+        continue;
       // 賣出價格
       const sellPrice = this.transaction.getSellPrice(
         stock.currentData[this.sellPrice]
