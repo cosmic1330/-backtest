@@ -25,6 +25,7 @@ type Options = {
   limitHandlingFee?: number;
   capital?: number;
   hightStockPrice?: number;
+  lowStockPrice?: number;
   hightLoss?: number;
   reviewPurchaseListMethod?: (data: StockListType) => boolean;
   reviewSellListMethod?: (data: StockListType) => boolean;
@@ -43,7 +44,8 @@ export default class Context {
   copy_capital: number; // 紀錄預設本金
   hightLoss: number; // 虧損上限
   unSoldProfit: number; // 未實現損益
-  hightStockPrice?: number; // 股價上限
+  hightStockPrice?: number; // 買入股價上限
+  lowStockPrice?: number; // 買入股價上限
   buyMethod: (data: StockListType) => LogicResType; // 買入判斷方法
   sellMethod: (data: StockListType) => LogicResType; // 賣出判斷方法
   buyPrice: BuyPrice; // 買入價格
@@ -70,6 +72,7 @@ export default class Context {
     this.capital = options?.capital ? options.capital : 300000;
     this.copy_capital = this.capital;
     this.hightStockPrice = options?.hightStockPrice;
+    this.lowStockPrice = options?.lowStockPrice;
     this.hightLoss = options?.hightLoss ? options.hightLoss : 0.1;
     this.buyPrice = options?.buyPrice || BuyPrice.OPEN;
     this.sellPrice = options?.sellPrice || SellPrice.LOW;
@@ -90,7 +93,7 @@ export default class Context {
   }
 
   init() {
-    this.capital= this.copy_capital;
+    this.capital = this.copy_capital;
     this.unSoldProfit = 0;
     this.record.init();
     this.dateSequence.init();
@@ -126,8 +129,11 @@ export default class Context {
       if (this.record.getInventoryStockId(stock.id)) continue;
       // 如果currentData不存在 跳過
       if (stock.currentData === undefined) continue;
-      // 如果最高價超過資金上限 跳過
-      if (this.hightStockPrice && stock.currentData.l > this.hightStockPrice)
+      // 如果高過或低於股價設定區間 跳過
+      if (
+        (this.hightStockPrice && stock.currentData.l > this.hightStockPrice) ||
+        (this.lowStockPrice && stock.currentData.l < this.lowStockPrice)
+      )
         continue;
 
       // 買入價格
