@@ -240,6 +240,7 @@ describe("Context", () => {
       capital: 20000000,
       hightLoss: 0.1,
       hightStockPrice: 2000,
+      lowStockPrice: 100,
       buyPrice: BuyPrice.CLOSE,
       sellPrice: SellPrice.OPEN,
       reviewPurchaseListMethod: () => true,
@@ -252,6 +253,7 @@ describe("Context", () => {
     expect(context.capital).toBe(20000000);
     expect(context.hightLoss).toBe(0.1);
     expect(context.hightStockPrice).toBe(2000);
+    expect(context.lowStockPrice).toBe(100);
     expect(context.buyPrice).toBe(BuyPrice.CLOSE);
     expect(context.sellPrice).toBe(SellPrice.OPEN);
     expect(context.reviewPurchaseListMethod).toBeDefined();

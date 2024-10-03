@@ -261,6 +261,11 @@ export default class Context {
       this.hightStockPrice = newOptions.hightStockPrice;
     }
 
+    // 更新股价下限
+    if (newOptions.lowStockPrice !== undefined) {
+      this.lowStockPrice = newOptions.lowStockPrice;
+    }
+
     // 更新买入价格
     if (newOptions.buyPrice !== undefined) {
       this.buyPrice = newOptions.buyPrice;
