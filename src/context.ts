@@ -40,6 +40,7 @@ export default class Context {
   stocks: { [id: string]: Stock }; // 股票模組列表
   market?: Market; // 市場模組
   capital: number; // 本金
+  copy_capital: number; // 紀錄預設本金
   hightLoss: number; // 虧損上限
   unSoldProfit: number; // 未實現損益
   hightStockPrice?: number; // 股價上限
@@ -67,6 +68,7 @@ export default class Context {
     this.stocks = stocks;
     this.unSoldProfit = 0;
     this.capital = options?.capital ? options.capital : 300000;
+    this.copy_capital = this.capital;
     this.hightStockPrice = options?.hightStockPrice;
     this.hightLoss = options?.hightLoss ? options.hightLoss : 0.1;
     this.buyPrice = options?.buyPrice || BuyPrice.OPEN;
@@ -88,6 +90,7 @@ export default class Context {
   }
 
   init() {
+    this.capital= this.copy_capital;
     this.unSoldProfit = 0;
     this.record.init();
     this.dateSequence.init();
