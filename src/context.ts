@@ -2,7 +2,7 @@ import DateSequence from "./dateSequence";
 import Market from "./market";
 import Record from "./record";
 import Stock from "./stock";
-import { shuffle } from "lodash-es";
+import _ from "lodash";
 
 import type { StockListType } from "@ch20026103/anysis/dist/esm/stockSkills/types";
 import Transaction from "./transaction";
@@ -123,7 +123,7 @@ export default class Context {
     )
       return;
 
-    const stocks = shuffle(Object.values(this.stocks));
+    const stocks = _.shuffle(Object.values(this.stocks));
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
       // 在庫存中 跳過
@@ -183,7 +183,7 @@ export default class Context {
   }
 
   sell() {
-    const stocks = shuffle(Object.values(this.stocks));
+    const stocks = _.shuffle(Object.values(this.stocks));
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
       // 如果不在庫存 跳過

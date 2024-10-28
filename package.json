@@ -1,6 +1,6 @@
 {
   "name": "@ch20026103/backtest",
-  "version": "0.0.6-beta",
+  "version": "0.0.7-alpha",
   "description": "provide many analyze methods in the library.",
   "keywords": [],
   "bugs": "git@github.com:cosmic1330/backtest/issues",
@@ -38,7 +38,7 @@
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.1.1",
     "@types/jest": "^26.0.24",
-    "@types/lodash-es": "^4.17.12",
+    "@types/lodash": "^4.14.168",
     "@types/node": "^16.11.17",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
@@ -66,7 +66,7 @@
   "dependencies": {
     "@ch20026103/anysis": "^0.0.16-alpha",
     "express": "^4.21.0",
-    "lodash-es": "^4.17.21",
+    "lodash": "^4.17.21",
     "node-fetch": "^3.3.2"
   }
 }
