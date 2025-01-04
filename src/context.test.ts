@@ -109,13 +109,12 @@ describe("Context", () => {
   });
 
   it("初始化正確", () => {
-
     expect(context.capital).toBe(10000000);
     expect(context.hightStockPrice).toBe(1000);
     expect(context.hightLoss).toBe(0.05);
     expect(context.buyPrice).toBe(BuyPrice.OPEN);
     expect(context.sellPrice).toBe(SellPrice.CLOSE);
-    
+
     context.run();
     context.run();
     context.init();
@@ -225,7 +224,7 @@ describe("Context", () => {
   });
 
   it("测试虧損上限触发卖出", () => {
-    context.updateOptions({hightLoss: 0.02});
+    context.updateOptions({ hightLoss: 0.02 });
     context.run();
     context.buy();
     context.stocks["1101"].futureData[0].l = 47;
@@ -237,14 +236,14 @@ describe("Context", () => {
     expect(context.record.getWaitSaleStockId("2330")).toBeTruthy();
   });
 
-  it("测试跌停無法触发卖出", () => {
+  it("测试跌停進入代售清單", () => {
     context.run();
     context.buy();
     context.stocks["1101"].futureData[0].l = 1;
     context.stocks["2330"].futureData[0].l = 1;
     context.run();
-    expect(context.record.getWaitSaleStockId("1101")).toBeFalsy();
-    expect(context.record.getWaitSaleStockId("2330")).toBeFalsy();
+    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
+    expect(context.record.getWaitSaleStockId("2330")).toBeTruthy();
   });
 
   it("测试updateOptions方法", () => {
@@ -255,8 +254,8 @@ describe("Context", () => {
       lowStockPrice: 100,
       buyPrice: BuyPrice.CLOSE,
       sellPrice: SellPrice.OPEN,
-      reviewPurchaseListMethod: () => true,
-      reviewSellListMethod: () => true,
+      finalizePendingPurchases: [],
+      finalizePendingSales: [],
       marketSentiment: () => true,
     };
 
@@ -268,8 +267,47 @@ describe("Context", () => {
     expect(context.lowStockPrice).toBe(100);
     expect(context.buyPrice).toBe(BuyPrice.CLOSE);
     expect(context.sellPrice).toBe(SellPrice.OPEN);
-    expect(context.reviewPurchaseListMethod).toBeDefined();
-    expect(context.reviewSellListMethod).toBeDefined();
+    expect(context.finalizePendingPurchases).eql([]);
+    expect(context.finalizePendingSales).eql([]);
     expect(context.marketSentiment).toBeDefined();
+  });
+
+  it("測試 finalizePendingPurchases", () => {
+    context.init();
+    context.updateOptions({
+      finalizePendingPurchases: [
+        ["h", 0],
+        ["o", 0],
+        ["l", 0],
+      ],
+    });
+
+    context.run();
+    expect(context.record.getWaitPurchasedStockId("1101")).toBeTruthy();
+    context.run();
+    expect(context.record.getWaitPurchasedStockId("1101")).toBeTruthy();
+    context.run();
+    expect(context.record.getWaitPurchasedStockId("1101")).toBeTruthy();
+    context.run();
+    expect(context.record.getInventoryStockId("1101")).toBeTruthy();
+  });
+
+  it("測試 finalizePendingSales", () => {
+    context.init();
+    context.updateOptions({
+      finalizePendingSales: [
+        [0, "c"],
+        [0, "c"],
+      ],
+    });
+    context.run();
+    context.buy();
+
+    context.run();
+    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
+    context.run();
+    expect(context.record.getWaitSaleStockId("1101")).toBeTruthy();
+    context.run();
+    expect(context.record.getInventoryStockId("1101")).toBeFalsy();
   });
 });

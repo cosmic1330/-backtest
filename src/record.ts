@@ -8,6 +8,7 @@ type InventoryItem = StockType & {
 type WaitSaleItem = {
   detail: string;
   method: string;
+  index: number;
 };
 
 type WaitPurchasedItem = WaitSaleItem;
@@ -101,5 +102,13 @@ export default class Record {
   getWaitPurchasedStockId(stockId: string) {
     const waitPurchaseds = Object.keys(this.waitPurchased);
     return waitPurchaseds.includes(stockId);
+  }
+
+  removeWaitPurchased(stockId: string) {
+    delete this.waitPurchased[stockId];
+  }
+
+  removeWaitSale(stockId: string) {
+    delete this.waitSale[stockId];
   }
 }

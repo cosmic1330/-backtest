@@ -1,8 +1,8 @@
+import _ from "lodash";
 import DateSequence from "./dateSequence";
 import Market from "./market";
 import Record from "./record";
 import Stock from "./stock";
-import _ from "lodash";
 
 import type { StockListType } from "@ch20026103/anysis/dist/esm/stockSkills/types";
 import Transaction from "./transaction";
@@ -28,8 +28,8 @@ type Options = {
   hightStockPrice?: number;
   lowStockPrice?: number;
   hightLoss?: number;
-  reviewPurchaseListMethod?: (data: StockListType) => boolean;
-  reviewSellListMethod?: (data: StockListType) => boolean;
+  finalizePendingPurchases?: [string | number, string | number][];
+  finalizePendingSales?: [string | number, string | number][];
   marketSentiment?: (data: StockListType) => boolean;
   buyPrice?: BuyPrice;
   sellPrice?: SellPrice;
@@ -47,12 +47,12 @@ export default class Context {
   unSoldProfit: number; // 未實現損益
   hightStockPrice?: number; // 買入股價上限
   lowStockPrice?: number; // 買入股價上限
-  buyMethod: (data: StockListType) => LogicResType; // 買入判斷方法
-  sellMethod: (data: StockListType) => LogicResType; // 賣出判斷方法
-  buyPrice: BuyPrice; // 買入價格
-  sellPrice: SellPrice; // 賣出價格
-  reviewPurchaseListMethod?: (data: StockListType) => boolean; // 買入清單檢查方法
-  reviewSellListMethod?: (data: StockListType) => boolean; // 賣出清單檢查方法
+  buyMethod: (data: StockListType) => LogicResType; // 納入買入清單方法
+  sellMethod: (data: StockListType) => LogicResType; // 納入賣出清單方法
+  buyPrice: BuyPrice; // 買入價格位置
+  sellPrice: SellPrice; // 賣出價格位置
+  finalizePendingPurchases: [string | number, string | number][]; // 符合待購清單購買條件(A>B)
+  finalizePendingSales: [string | number, string | number][]; // 賣出清單檢查方法(A<B)
   marketSentiment?: (data: StockListType) => boolean; // 市場情緒判斷方法
 
   constructor({
@@ -79,8 +79,8 @@ export default class Context {
     this.sellPrice = options?.sellPrice || SellPrice.LOW;
     this.sellMethod = sellMethod;
     this.buyMethod = buyMethod;
-    this.reviewPurchaseListMethod = options?.reviewPurchaseListMethod;
-    this.reviewSellListMethod = options?.reviewSellListMethod;
+    this.finalizePendingPurchases = options?.finalizePendingPurchases || [];
+    this.finalizePendingSales = options?.finalizePendingSales || [];
     this.marketSentiment = options?.marketSentiment;
     this.market = options?.market;
 
@@ -142,18 +142,6 @@ export default class Context {
         stock.currentData[this.buyPrice]
       );
 
-      // 在待購清單內且本金足夠買盤價、符合買入清單檢查方法 買入
-      if (
-        (this.reviewPurchaseListMethod === undefined ||
-          this.reviewPurchaseListMethod(stock.historyData)) &&
-        this.record.getWaitPurchasedStockId(stock.id) &&
-        this.capital - buyPrice > 0
-      ) {
-        this.record.save(stock.id, stock.currentData, buyPrice);
-        this.capital -= buyPrice; // 扣錢
-        continue;
-      }
-
       // 如果最高價超過資金上限 跳過
       if (buyPrice > this.capital) continue;
 
@@ -171,12 +159,64 @@ export default class Context {
       )
         continue;
 
+      // 在待購清單內 買入
+      if (this.record.getWaitPurchasedStockId(stock.id)) {
+        // 驗證指定的待購清單檢查方法
+        if (this.finalizePendingPurchases.length > 0) {
+          try {
+            const checkIndex = this.record.waitPurchased[stock.id].index;
+            const indexs = this.finalizePendingPurchases
+              .map((_, index) => checkIndex + index + 1)
+              .filter((index) => stock.historyData.length > index);
+            const res = indexs.every((number, index) => {
+              const A = this.finalizePendingPurchases[index][0];
+              const B = this.finalizePendingPurchases[index][1];
+              if (
+                typeof A === "string" &&
+                typeof B === "string" &&
+                <number>stock.historyData[number][A] >
+                  <number>stock.historyData[number][B]
+              )
+                return true;
+              else if (typeof A === "number" && typeof B === "number" && A > B)
+                return true;
+              else if (
+                typeof A === "string" &&
+                typeof B === "number" &&
+                <number>stock.historyData[number][A] > B
+              )
+                return true;
+              else if (
+                typeof A === "number" &&
+                typeof B === "string" &&
+                A > <number>stock.historyData[number][B]
+              )
+                return true;
+              else return false;
+            });
+            if (res && indexs.length === this.finalizePendingPurchases.length) {
+              this.record.save(stock.id, stock.currentData, buyPrice);
+              this.capital -= buyPrice; // 扣錢
+            } else if (!res) {
+              this.record.removeWaitPurchased(stock.id);
+            }
+          } catch (error) {
+            console.log("error:", stock.id, error);
+          }
+          continue;
+        }
+        this.record.save(stock.id, stock.currentData, buyPrice);
+        this.capital -= buyPrice; // 扣錢
+        continue;
+      }
+
       // 達到買入條件加入待購清單
       const res = this.buyMethod(stock.historyData);
       if (res.status) {
         this.record.saveWaitPurchased(stock.id, {
           detail: res.detail,
           method: "buyMethod",
+          index: stock.historyData.length - 1,
         });
       }
     }
@@ -190,7 +230,69 @@ export default class Context {
       if (!this.record.getInventoryStockId(stock.id)) continue;
       // 如果currentData不存在 跳過
       if (stock.currentData === undefined) continue;
-      // 如果最低價跌停 跳過 (損失規避心理)
+
+      // 賣出價格
+      const sellPrice = this.transaction.getSellPrice(
+        stock.currentData[this.sellPrice]
+      );
+
+      // 在待售清單內 買入
+      if (this.record.getWaitSaleStockId(stock.id)) {
+        // 驗證指定的待售清單檢查方法
+        if (this.finalizePendingSales.length > 0) {
+          try {
+            const checkIndex = this.record.waitSale[stock.id].index;
+            const indexs = this.finalizePendingSales
+              .map((_, index) => checkIndex + index + 1)
+              .filter((index) => stock.historyData.length > index);
+            const res = indexs.every((number, index) => {
+              const A = this.finalizePendingSales[index][0];
+              const B = this.finalizePendingSales[index][1];
+              if (
+                typeof A === "string" &&
+                typeof B === "string" &&
+                <number>stock.historyData[number][A] <
+                  <number>stock.historyData[number][B]
+              )
+                return true;
+              else if (typeof A === "number" && typeof B === "number" && A < B)
+                return true;
+              else if (
+                typeof A === "string" &&
+                typeof B === "number" &&
+                <number>stock.historyData[number][A] < B
+              )
+                return true;
+              else if (
+                typeof A === "number" &&
+                typeof B === "string" &&
+                <number>stock.historyData[number][B] > A
+              )
+                return true;
+              else return false;
+            });
+            if (res && indexs.length === this.finalizePendingSales.length) {
+              this.record.remove(
+                stock.id,
+                stock.name,
+                stock.currentData,
+                sellPrice
+              );
+              this.capital += sellPrice;
+            } else if (!res) {
+              this.record.removeWaitSale(stock.id);
+            }
+            continue;
+          } catch (error) {
+            console.log("error:", stock.id, error);
+          }
+        }
+        this.record.remove(stock.id, stock.name, stock.currentData, sellPrice);
+        this.capital += sellPrice;
+        continue;
+      }
+
+      // 如果最低價跌停加入待售清單 (損失規避心理)
       if (
         stock.historyData.length > 1 &&
         stock.historyData[stock.historyData.length - 1].l <
@@ -201,20 +303,12 @@ export default class Context {
             stock.historyData[stock.historyData.length - 1].l) *
             100
         ) > 9.5
-      )
-        continue;
-      // 賣出價格
-      const sellPrice = this.transaction.getSellPrice(
-        stock.currentData[this.sellPrice]
-      );
-      // 在待售清單內且符合賣出清單檢查方法 賣出
-      if (
-        (this.reviewSellListMethod === undefined ||
-          this.reviewSellListMethod(stock.historyData)) &&
-        this.record.getWaitSaleStockId(stock.id)
       ) {
-        this.record.remove(stock.id, stock.name, stock.currentData, sellPrice);
-        this.capital += sellPrice;
+        this.record.saveWaitSale(stock.id, {
+          detail: "最低價跌停",
+          method: "limit down",
+          index: stock.historyData.length - 1,
+        });
         continue;
       }
 
@@ -223,11 +317,12 @@ export default class Context {
       if (
         this.hightLoss &&
         buyData.buyPrice - buyData.buyPrice * this.hightLoss >
-        1000 * stock.currentData.l
+          1000 * stock.currentData.l
       ) {
         this.record.saveWaitSale(stock.id, {
           detail: "超過設定虧損",
           method: "hight loss",
+          index: stock.historyData.length - 1,
         });
         continue;
       }
@@ -238,6 +333,7 @@ export default class Context {
         this.record.saveWaitSale(stock.id, {
           detail: res.detail,
           method: "sellMethod",
+          index: stock.historyData.length - 1,
         });
       }
     }
@@ -306,13 +402,13 @@ export default class Context {
     }
 
     // 更新买入清单检查方法
-    if (newOptions.reviewPurchaseListMethod !== undefined) {
-      this.reviewPurchaseListMethod = newOptions.reviewPurchaseListMethod;
+    if (newOptions.finalizePendingPurchases !== undefined) {
+      this.finalizePendingPurchases = newOptions.finalizePendingPurchases;
     }
 
     // 更新卖出清单检查方法
-    if (newOptions.reviewSellListMethod !== undefined) {
-      this.reviewSellListMethod = newOptions.reviewSellListMethod;
+    if (newOptions.finalizePendingSales !== undefined) {
+      this.finalizePendingSales = newOptions.finalizePendingSales;
     }
 
     // 更新市场情绪判断方法
