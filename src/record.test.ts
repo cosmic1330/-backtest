@@ -43,6 +43,7 @@ describe("Record", () => {
     record.saveWaitPurchased("1", {
       detail: "Test Detail",
       method: "Test Method",
+      index: 1,
     });
     record.save("1", buyStockData, 90);
 
@@ -50,6 +51,7 @@ describe("Record", () => {
       ...buyStockData,
       detail: "Test Detail",
       method: "Test Method",
+      index: 1,
       buyPrice: 90,
     });
     expect(record.waitPurchased["1"]).toBeUndefined();
@@ -59,9 +61,14 @@ describe("Record", () => {
     record.saveWaitPurchased("1", {
       detail: "Buy Detail",
       method: "Buy Method",
+      index: 0,
     });
     record.save("1", buyStockData, 100);
-    record.saveWaitSale("1", { detail: "Sell Detail", method: "Sell Method" });
+    record.saveWaitSale("1", {
+      detail: "Sell Detail",
+      method: "Sell Method",
+      index: 0,
+    });
     record.remove("1", "Test Stock1", sellStockData, 120);
 
     expect(record.inventory["1"]).toBeUndefined();
@@ -76,12 +83,14 @@ describe("Record", () => {
         ...buyStockData,
         detail: "Buy Detail",
         method: "Buy Method",
+        index: 0,
         buyPrice: 100,
       },
       sell: {
         ...sellStockData,
         detail: "Sell Detail",
         method: "Sell Method",
+        index: 0,
         sellPrice: 120,
       },
     });
@@ -102,7 +111,11 @@ describe("Record", () => {
   });
 
   test("getWaitSaleStockId 方法", () => {
-    record.saveWaitSale("1", { detail: "Test Detail", method: "Test Method" });
+    record.saveWaitSale("1", {
+      detail: "Test Detail",
+      method: "Test Method",
+      index: 0,
+    });
     expect(record.getWaitSaleStockId("1")).toBe(true);
     expect(record.getWaitSaleStockId("2")).toBe(false);
   });
@@ -111,6 +124,7 @@ describe("Record", () => {
     record.saveWaitPurchased("1", {
       detail: "Test Detail",
       method: "Test Method",
+      index: 0,
     });
     expect(record.getWaitPurchasedStockId("1")).toBe(true);
     expect(record.getWaitPurchasedStockId("2")).toBe(false);
@@ -121,14 +135,20 @@ describe("Record", () => {
     record.saveWaitPurchased("1", {
       detail: "Test Detail",
       method: "Test Method",
+      index: 0,
     });
     record.save("1", buyStockData, 90);
-    record.saveWaitSale("1", { detail: "Test Detail", method: "Test Method" });
+    record.saveWaitSale("1", {
+      detail: "Test Detail",
+      method: "Test Method",
+      index: 0,
+    });
     expect(record.getWaitSaleStockId("1")).toBe(true);
     expect(record.inventory["1"]).toEqual({
       ...buyStockData,
       detail: "Test Detail",
       method: "Test Method",
+      index: 0,
       buyPrice: 90,
     });
 
